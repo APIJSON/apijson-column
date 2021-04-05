@@ -1,6 +1,6 @@
 # apijson-column  [![](https://jitpack.io/v/APIJSON/apijson-column.svg)](https://jitpack.io/#APIJSON/apijson-column)
 腾讯 [APIJSON](https://github.com/Tencent/APIJSON) 字段插件，支持 字段名映射 和 !key 反选字段，可通过 Maven, Gradle 等远程依赖。<br />
-A column plugin for Tencent [APIJSON](https://github.com/Tencent/APIJSON), support Invert Selection and Mappding for columns.
+A column plugin for Tencent [APIJSON](https://github.com/Tencent/APIJSON), support Column Inverse and Column Mappding.
 
 ### Maven
 #### 1. 在 pom.xml 中添加 JitPack 仓库
