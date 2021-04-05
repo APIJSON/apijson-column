@@ -71,7 +71,7 @@ See document in [ColumnUtil](/blob/main/src/main/java/apijson/column/ColumnUtil.
 
 ### 1.反选字段
 ### 1. Column Inverse
-"@column": "!columnKey"  // 返回排除 columnKey 后的全部其它字段
+"@column": "!columnKey"  // 返回排除 columnKey 后的全部其它字段 <br />
 "@column": "!columnKey"  // return all columns except for columnKey
 ```js
 {
@@ -84,8 +84,8 @@ See document in [ColumnUtil](/blob/main/src/main/java/apijson/column/ColumnUtil.
 
 ### 2.字段名映射
 ### 2. Column Mapping
-"@column": "mappedKey"  // 隐藏了数据库的对应真实字段名
-"@column": "mappedKey"  // the real column name is hidden
+"@column": "showKey"  // 隐藏了数据库的对应真实字段名 <br />
+"@column": "showKey"  // the real column name is hidden
 ```js
 {
     "User": {  // id,sex,name,tag,head,contactIdList,pictureList,date
