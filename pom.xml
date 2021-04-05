@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>com.github.Tencent</groupId>
 			<artifactId>APIJSON</artifactId>
-			<version>4.6.5</version>
+			<version>4.6.6</version>
 		</dependency>
 		<!-- 可使用 libs 目录的 apijson-orm.jar 来替代，两种方式二选一 >>>>>>>>>> -->
 
