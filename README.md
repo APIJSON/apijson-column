@@ -2,6 +2,9 @@
 腾讯 [APIJSON](https://github.com/Tencent/APIJSON) 字段插件，支持 字段名映射 和 !key 反选字段，可通过 Maven, Gradle 等远程依赖。<br />
 A column plugin for Tencent [APIJSON](https://github.com/Tencent/APIJSON), support Column Inverse and Column Mappding.
 
+## 添加依赖
+## Add Dependency
+
 ### Maven
 #### 1. 在 pom.xml 中添加 JitPack 仓库
 #### 1. Add the JitPack repository to pom.xml
@@ -27,7 +30,6 @@ A column plugin for Tencent [APIJSON](https://github.com/Tencent/APIJSON), suppo
 
 <br />
 <br />
-<br />
 
 ### Gradle
 #### 1. 在项目根目录 build.gradle 中最后添加 JitPack 仓库
@@ -50,18 +52,25 @@ A column plugin for Tencent [APIJSON](https://github.com/Tencent/APIJSON), suppo
 	}
 ```
 
-### 初始化
-### Initialization
+<br />
+<br />
+<br />
+
+## 初始化
+## Initialization
 见 [ColumnUtil](/blob/main/src/main/java/apijson/column/ColumnUtil.java) 的注释及 [APIJSONBoot](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot) 的 [DemoSQLConfig](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLConfig.java) 和 [DemoSQLEexcutor](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLEexcutor.java) <br />
 
 See document in [ColumnUtil](/blob/main/src/main/java/apijson/column/ColumnUtil.java) and [DemoSQLConfig](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLConfig.java), [DemoSQLEexcutor](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLEexcutor.java) in [APIJSONBoot](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot)
 
+<br />
+<br />
+<br />
 
-### 使用
-### Usage
+## 使用
+## Usage
 
-#### 1.反选字段
-#### 1. Column Inverse
+### 1.反选字段
+### 1. Column Inverse
 "@column": "!columnKey"  // 返回排除 columnKey 后的全部其它字段
 "@column": "!columnKey"  // return all columns except for columnKey
 ```js
@@ -73,8 +82,8 @@ See document in [ColumnUtil](/blob/main/src/main/java/apijson/column/ColumnUtil.
 }
 ```
 
-#### 2.字段名映射
-#### 2. Column Mapping
+### 2.字段名映射
+### 2. Column Mapping
 "@column": "mappedKey"  // 隐藏了数据库的对应真实字段名
 "@column": "mappedKey"  // the real column name is hidden
 ```js
