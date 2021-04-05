@@ -82,6 +82,9 @@ See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and 
 }
 ```
 
+![image](https://user-images.githubusercontent.com/5738175/113572899-ab903380-964b-11eb-9f3c-69f3437d8a54.png)
+
+
 ### 2.字段名映射
 ### 2. Column Mapping
 "@column": "showKey"  // 隐藏了数据库的对应真实字段名 <br />
@@ -94,5 +97,8 @@ See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and 
     }
 }
 ```
+
+![image](https://user-images.githubusercontent.com/5738175/113572926-b77bf580-964b-11eb-8a17-10917669c2aa.png)
+
 
 <br /><br />
