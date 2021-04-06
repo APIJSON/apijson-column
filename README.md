@@ -100,5 +100,7 @@ See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and 
 
 ![image](https://user-images.githubusercontent.com/5738175/113572926-b77bf580-964b-11eb-8a17-10917669c2aa.png)
 
+注意：APIAuto 不能自动获取并展示对应映射字段的文档(类型、长度、注释等)，只能手写注释 <br />
+Note: APIAuto cannot automatically get and show the document of the key(type, length, comment, etc), you can add comment manually. 
 
 <br /><br />
