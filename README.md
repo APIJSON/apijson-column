@@ -70,7 +70,7 @@ See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and 
 ## Usage
 
 ### 1.反选字段
-### 1. Column Inverse
+### 1.Column Inverse
 "@column": "!columnKey"  // 返回排除 columnKey 后的全部其它字段 <br />
 "@column": "!columnKey"  // return all columns except for columnKey
 ```js
@@ -86,7 +86,7 @@ See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and 
 
 
 ### 2.字段名映射
-### 2. Column Mapping
+### 2.Column Mapping
 "@column": "showKey"  // 隐藏了数据库的对应真实字段名 <br />
 "@column": "showKey"  // the real column name is hidden
 ```js
@@ -104,3 +104,5 @@ See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and 
 Note: [APIAuto](https://github.com/TommyLemon/APIAuto) cannot automatically get and show the document for the showKey, you can add comment manually. 
 
 <br /><br />
+
+对你有用的话点右上角 ⭐Star 支持一下，谢谢 ^_^
