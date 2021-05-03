@@ -213,7 +213,7 @@ public class ColumnUtil {
 	 * @see 先提前配置 {@link #VERSIONED_KEY_COLUMN_MAP}，然后在 {@link AbstractSQLConfig} 的子类重写 {@link AbstractSQLConfig#getKey } 并调用这个方法，例如
 	 * <pre >
 	   public String getKey(String key) { <br>
-	  	 return ColumnUtil.compatInputKey(super.getKey(key), getTable(), version); <br>
+	  	 return super.getKey(ColumnUtil.compatInputKey(key, getTable(), version)); <br>
 	   }
 	 * </pre>
 	 */
