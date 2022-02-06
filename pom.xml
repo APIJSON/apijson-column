@@ -5,7 +5,7 @@
 
 	<groupId>apijson.column</groupId>
 	<artifactId>apijson-column</artifactId>
-	<version>1.1.5</version>
+	<version>1.1.6</version>
 	<packaging>jar</packaging>
 
 	<name>apijson-column</name>
@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>com.github.Tencent</groupId>
 			<artifactId>APIJSON</artifactId>
-			<version>4.8.3</version>
+			<version>4.9.0</version>
 		</dependency>
 		<!-- 可使用 libs 目录的 apijson-orm.jar 来替代，两种方式二选一 >>>>>>>>>> -->
 
