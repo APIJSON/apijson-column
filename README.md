@@ -80,7 +80,7 @@ https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONB
 		ColumnUtil.VERSIONED_TABLE_COLUMN_MAP.put(null, tableColumnMap);
 		
 		Map<String, String> userKeyColumnMap = new HashMap<>();
-		userKeyColumnMap.put("gender", "sex");
+		userKeyColumnMap.put("gender", "sex");  // gender -> sex
 		
 		Map<String, Map<String, String>> keyColumnMap = new HashMap<>();
 		keyColumnMap.put("User", userKeyColumnMap);
