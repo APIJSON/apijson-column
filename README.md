@@ -63,13 +63,65 @@ A column plugin for Tencent [APIJSON](https://github.com/Tencent/APIJSON) 4.6.6+
 
 ## 初始化
 ## Initialization
-见 [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) 的注释及 [APIJSONBoot](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot) 的 [DemoSQLConfig](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLConfig.java) 和 [DemoSQLExecutor](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLExecutor.java) <br />
 
-See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and [DemoSQLConfig](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLConfig.java), [DemoSQLExecutor](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLExecutor.java) in [APIJSONBoot](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot)
+#### 1.在你项目继承 AbstractSQLConfig 的子类 static {} 代码块配置映射关系
+#### 1.Configure mappings in static {} of your SQLConfig extends AbstractSQLConfig
+```java
+	static {
+		Map<String, List<String>> tableColumnMap = new HashMap<>();
+		tableColumnMap.put("User", Arrays.asList(StringUtil.split("id,sex,name,tag,head,contactIdList,pictureList,date")));
+		ColumnUtil.VERSIONED_TABLE_COLUMN_MAP.put(null, tableColumnMap);
+		
+		Map<String, String> userKeyColumnMap = new HashMap<>();
+		userKeyColumnMap.put("gender", "sex");
+		
+		Map<String, Map<String, String>> tableKeyColumnMap = new HashMap<>();
+		tableKeyColumnMap.put("User", userKeyColumnMap);
+
+		ColumnUtil.VERSIONED_KEY_COLUMN_MAP.put(null, tableKeyColumnMap);
+
+		ColumnUtil.init();
+	}
+```
 
 ![image](https://user-images.githubusercontent.com/5738175/167261660-f22a65a1-41ec-41c2-a97e-f4e809a3ddc9.png)
+
+<br />
+
+#### 2.在你项目继承 AbstractSQLConfig 的子类重写方法 setColumn, getKey
+#### 2.Override setColumn, getKey in your SQLConfig extends AbstractSQLConfig
+```java
+	@Override
+	public AbstractSQLConfig setColumn(List<String> column) {
+		return super.setColumn(ColumnUtil.compatInputColumn(column, getTable(), getMethod()));
+	}
+	@Override
+	public String getKey(String key) {
+		return super.getKey(ColumnUtil.compatInputKey(key, getTable(), getMethod()));
+	}
+```
+
 ![image](https://user-images.githubusercontent.com/5738175/167261697-48d54c3f-2913-4e07-8e41-80058688ac8b.png)
+
+<br />
+
+#### 3.在你项目继承 AbstractSQLExecutor 的子类重写方法 getKey
+#### 3.Override getKey in your SQLExecutor extends AbstractSQLExecutor
+```java
+	@Override
+	protected String getKey(SQLConfig config, ResultSet rs, ResultSetMetaData rsmd, int tablePosition, JSONObject table,
+			int columnIndex, Map<String, JSONObject> childMap) throws Exception {
+		return ColumnUtil.compatOutputKey(super.getKey(config, rs, rsmd, tablePosition, table, columnIndex, childMap), config.getTable(), config.getMethod());
+	}
+```
+
 ![image](https://user-images.githubusercontent.com/5738175/167261741-7d9436bc-bd12-447c-bfa5-20631497164f.png)
+
+<br /><br />
+
+#### 见 [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) 的注释及 [APIJSONBoot](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot) 的 [DemoSQLConfig](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLConfig.java) 和 [DemoSQLExecutor](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLExecutor.java) <br />
+
+#### See document in [ColumnUtil](/src/main/java/apijson/column/ColumnUtil.java) and [DemoSQLConfig](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLConfig.java), [DemoSQLExecutor](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot/src/main/java/apijson/demo/DemoSQLExecutor.java) in [APIJSONBoot](https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONBoot)
 
 <br />
 <br />
