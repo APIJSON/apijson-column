@@ -82,10 +82,10 @@ https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONB
 		Map<String, String> userKeyColumnMap = new HashMap<>();
 		userKeyColumnMap.put("gender", "sex");
 		
-		Map<String, Map<String, String>> tableKeyColumnMap = new HashMap<>();
-		tableKeyColumnMap.put("User", userKeyColumnMap);
+		Map<String, Map<String, String>> keyColumnMap = new HashMap<>();
+		keyColumnMap.put("User", userKeyColumnMap);
 
-		ColumnUtil.VERSIONED_KEY_COLUMN_MAP.put(null, tableKeyColumnMap);
+		ColumnUtil.VERSIONED_KEY_COLUMN_MAP.put(null, keyColumnMap);
 
 		ColumnUtil.init();
 	}
