@@ -50,7 +50,6 @@ https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONB
 ```gradle
 	allprojects {
 		repositories {
-			...
 			maven { url 'https://jitpack.io' }
 		}
 	}
