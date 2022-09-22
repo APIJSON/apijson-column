@@ -171,6 +171,10 @@ https://github.com/APIJSON/APIJSON-Demo/blob/master/APIJSON-Java-Server/APIJSONB
 注意：[APIAuto](https://github.com/TommyLemon/APIAuto) 不能自动获取并展示对应映射字段 showKey 的类型、长度、注释等文档，只能通过手写注释来实现 <br />
 Note: [APIAuto](https://github.com/TommyLemon/APIAuto) cannot automatically get and show the document for the showKey, you can add comment manually. 
 
+<br />
+有问题可以去 Tencent/APIJSON 提 issue <br />
+https://github.com/Tencent/APIJSON/issues/36
+
 <br /><br />
 
 #### 点右上角 ⭐Star 支持一下，谢谢 ^_^
