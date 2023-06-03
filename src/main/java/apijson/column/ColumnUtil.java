@@ -180,7 +180,7 @@ public class ColumnUtil {
 	 * @return
 	 */
 	public static List<String> compatInputColumn(List<String> columns, String table, RequestMethod method) {
-		return compatInputColumn(columns, table, method, null);
+		return compatInputColumn(columns, table, method, null, false);
 	}
 
 	/**适配请求参数 JSON 中 @column:value 的 value 中的 key。支持 !key 反选字段 和 字段名映射
@@ -196,7 +196,7 @@ public class ColumnUtil {
 	}
 	 * </pre>
 	 */
-	public static List<String> compatInputColumn(List<String> columns, String table, RequestMethod method, Integer version) {
+	public static List<String> compatInputColumn(List<String> columns, String table, RequestMethod method, Integer version, boolean throwWhenNoKey) {
 		String[] keys = columns == null ? null : columns.toArray(new String[]{});  // StringUtil.split(c, ";");
 		if (keys == null || keys.length <= 0) { // JOIN 副表可以设置 @column:"" 来指定不返回字段
 			return columns != null ? columns : getClosestValue(VERSIONED_TABLE_COLUMN_MAP, version, table);
@@ -208,6 +208,9 @@ public class ColumnUtil {
 		List<String> newColumns = new ArrayList<>();
 
 		Map<String, String> keyColumnMap = getClosestValue(VERSIONED_KEY_COLUMN_MAP, version, table);
+		boolean isEmpty = keyColumnMap == null || keyColumnMap.isEmpty();
+
+		String q = "`";
 
 		String expression;
 		//...;fun0(arg0,arg1,...):fun0;fun1(arg0,arg1,...):fun1;...
@@ -215,8 +218,37 @@ public class ColumnUtil {
 
 			//!column,column2,!column3,column4:alias4;fun(arg0,arg1,...)
 			expression = keys[i];
-			if (expression.contains("(") || expression.contains(")")) {
-				newColumns.add(expression);
+			int start = expression.indexOf("(");
+			int end = expression.lastIndexOf(")");
+			if (start >= 0 && start < end) {
+				String[] ks = StringUtil.split(expression.substring(start + 1, end));
+
+				String expr = expression.substring(0, start + 1);
+				for (int j = 0; j < ks.length; j++) {
+					String ck = ks[j];
+					boolean hasQuote = false;
+					if (ck.endsWith("`")) {
+						String nck = ck.substring(0, ck.length() - 1);
+						if (nck.lastIndexOf("`") == 0) {
+							ck = nck.substring(1);
+							hasQuote = true;
+						}
+					}
+
+					String rc = null;
+					if (hasQuote || StringUtil.isName(ck)) {
+						rc = isEmpty ? null : keyColumnMap.get(ck);
+						if (rc == null && isEmpty == false && throwWhenNoKey) {
+							throw new NullPointerException(table + ":{ @column: value } 的 value 中 " + ck + " 不合法！不允许传后端未授权访问的字段名！");
+						}
+					}
+
+					expr += (j <= 0 ? "" : ",") + (hasQuote ? q : "") + (rc == null ? ck : rc) + (hasQuote ? q : "");
+				}
+
+				newColumns.add(expr + expression.substring(end));
+
+//				newColumns.add(expression);
 				continue;
 			}
 
@@ -227,25 +259,42 @@ public class ColumnUtil {
 
 					if (ck.startsWith("!")) {
 						if (ck.length() <= 1) {
-							throw new IllegalArgumentException("@column:value 的 value 中 " + ck + " 不合法！ !column 不允许 column 为空字符串！column,!column2,!column3,column4:alias4 中所有 column 必须符合变量名格式！");
+							throw new IllegalArgumentException("@column:value 的 value 中 " + ck
+									+ " 不合法！ !column 不允许 column 为空字符串！column,!column2,!column3,column4:alias4 中所有 column 必须符合变量名格式！");
 						}
 						String c = ck.substring(1);
 						if (StringUtil.isName(c) == false) {
-							throw new IllegalArgumentException("@column:value 的 value 中 " + c + " 不合法！ column,!column2,!column3,column4:alias4 中所有 column 必须符合变量名格式！");
+							throw new IllegalArgumentException("@column:value 的 value 中 " + c
+									+ " 不合法！ column,!column2,!column3,column4:alias4 中所有 column 必须符合变量名格式！");
 						}
 
-						String rc = keyColumnMap == null || keyColumnMap.isEmpty() ? null : keyColumnMap.get(c);
+						String rc = isEmpty ? null : keyColumnMap.get(c);
 						exceptColumns.add(rc == null ? c : rc);  // 不使用数据库别名，以免 JOIN 等复杂查询情况下报错字段不存在	exceptColumnMap.put(nc == null ? c : nc, c);  // column:alias
 					} else {
-						String rc = keyColumnMap == null || keyColumnMap.isEmpty() ? null : keyColumnMap.get(ck);
+						boolean hasQuote = false;
+						if (ck.endsWith("`")) {
+							String nck = ck.substring(0, ck.length() - 1);
+							if (nck.lastIndexOf("`") == 0) {
+								ck = nck.substring(1);
+								hasQuote = true;
+							}
+						}
+
+						String rc = null;
+						if (hasQuote || StringUtil.isName(ck)) {
+							rc = isEmpty ? null : keyColumnMap.get(ck);
+							if (rc == null && isEmpty == false && throwWhenNoKey) {
+								throw new NullPointerException(table + ":{ @column: value } 的 value 中 " + ck + " 不合法！不允许传后端未授权访问的字段名！");
+							}
+						}
+
 						newColumns.add(rc == null ? ck : rc);  // 不使用数据库别名，以免 JOIN 等复杂查询情况下报错字段不存在 newColumns.add(rc == null ? ck : (isQueryMethod ? (rc + ":" + ck) : rc));
 					}
 				}
 			}
 		}
 
-		boolean isEmpty = exceptColumns == null || exceptColumns.isEmpty();  // exceptColumnMap == null || exceptColumnMap.isEmpty();
-		List<String> allColumns = isEmpty ? null : getClosestValue(VERSIONED_TABLE_COLUMN_MAP, version, table);
+		List<String> allColumns = exceptColumns == null || exceptColumns.isEmpty() ? null : getClosestValue(VERSIONED_TABLE_COLUMN_MAP, version, table);
 
 		if (allColumns != null && allColumns.isEmpty() == false) {
 
