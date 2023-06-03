@@ -14,12 +14,8 @@ limitations under the License.*/
 
 package apijson.column;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import apijson.RequestMethod;
 import apijson.StringUtil;
@@ -37,21 +33,29 @@ public class ColumnUtil {
 	/**带版本的表和字段一对多对应关系，用来做 反选字段
 	 * Map<version, Map<table, [column0, column1...]>>
 	 */
-	public static final Map<Integer, Map<String, List<String>>> VERSIONED_TABLE_COLUMN_MAP;
+	public static SortedMap<Integer, Map<String, List<String>>> VERSIONED_TABLE_COLUMN_MAP;
 
 	/**带版本的 JSON key 和表字段一对一对应关系，用来做字段名映射
 	 * Map<version, Map<table, Map<key, column>>>
 	 */
-	public static final Map<Integer, Map<String, Map<String, String>>> VERSIONED_KEY_COLUMN_MAP;
+	public static SortedMap<Integer, Map<String, Map<String, String>>> VERSIONED_KEY_COLUMN_MAP;
 
 	/**带版本的 JSON key 和表字段一对一对应关系，用来做字段名映射，与 VERSIONED_KEY_COLUMN_MAP 相反
 	 * Map<version, Map<table, Map<column, key>>>
 	 */
-	private static Map<Integer, Map<String, Map<String, String>>> VERSIONED_COLUMN_KEY_MAP;
+	private static SortedMap<Integer, Map<String, Map<String, String>>> VERSIONED_COLUMN_KEY_MAP;
+
+	public static final Comparator<Integer> DESC_COMPARATOR = new Comparator<Integer>() {
+		@Override
+		public int compare(Integer o1, Integer o2) {
+			return o2.compareTo(o1);
+		}
+	};
+
 	static {
-		VERSIONED_TABLE_COLUMN_MAP = new HashMap<>();
-		VERSIONED_KEY_COLUMN_MAP = new HashMap<>();
-		VERSIONED_COLUMN_KEY_MAP = new HashMap<>();
+		VERSIONED_TABLE_COLUMN_MAP = new TreeMap<>(DESC_COMPARATOR);
+		VERSIONED_KEY_COLUMN_MAP = new TreeMap<>(DESC_COMPARATOR);
+		VERSIONED_COLUMN_KEY_MAP = new TreeMap<>(DESC_COMPARATOR);
 	}
 
 	/**初始化
@@ -59,10 +63,11 @@ public class ColumnUtil {
 	public static void init() {
 		VERSIONED_COLUMN_KEY_MAP.clear();
 
+		// 反过来补全 column -> key 的配置，以空间换时间
 		Set<Entry<Integer, Map<String, Map<String, String>>>> set = VERSIONED_KEY_COLUMN_MAP.entrySet();
 		if (set != null && set.isEmpty() == false) {
 
-			Map<Integer, Map<String, Map<String, String>>> map = new HashMap<>();
+			SortedMap<Integer, Map<String, Map<String, String>>> map = new TreeMap<>(DESC_COMPARATOR);
 
 			for (Entry<Integer, Map<String, Map<String, String>>> entry : set) {
 
@@ -98,6 +103,74 @@ public class ColumnUtil {
 
 			VERSIONED_COLUMN_KEY_MAP = map;
 		}
+
+
+		// 补全剩下未定义别名的 key，以空间换时间
+		Set<Entry<Integer, Map<String, List<String>>>> allSet = VERSIONED_TABLE_COLUMN_MAP.entrySet();
+		if (allSet != null && allSet.isEmpty() == false) {
+			
+			for (Entry<Integer, Map<String, List<String>>> entry : allSet) {
+				Map<String, Map<String, String>> keyColumnMap = VERSIONED_KEY_COLUMN_MAP.get(entry.getKey());
+				Map<String, Map<String, String>> columnKeyMap = VERSIONED_COLUMN_KEY_MAP.get(entry.getKey());
+				if (keyColumnMap == null) {
+					keyColumnMap = new LinkedHashMap<>();
+					VERSIONED_KEY_COLUMN_MAP.put(entry.getKey(), keyColumnMap);
+				}
+				if (columnKeyMap == null) {
+					columnKeyMap = new LinkedHashMap<>();
+					VERSIONED_COLUMN_KEY_MAP.put(entry.getKey(), columnKeyMap);
+				}
+				
+				Map<String, List<String>> tableKeyColumnMap = entry == null ? null : entry.getValue();
+				Set<Entry<String, List<String>>> tableKeyColumnSet = tableKeyColumnMap == null ? null : tableKeyColumnMap.entrySet();
+
+				if (tableKeyColumnSet != null && tableKeyColumnSet.isEmpty() == false) {
+
+					for (Entry<String, List<String>> tableKeyColumnEntry : tableKeyColumnSet) {
+
+						List<String> list = tableKeyColumnEntry == null ? null : tableKeyColumnEntry.getValue();
+
+						if (list != null && list.isEmpty() == false) {
+
+							Map<String, String> kcm = keyColumnMap.get(tableKeyColumnEntry.getKey());
+							Map<String, String> ckm = columnKeyMap.get(tableKeyColumnEntry.getKey());
+							if (kcm == null) {
+								kcm = new LinkedHashMap<>();
+								keyColumnMap.put(tableKeyColumnEntry.getKey(), kcm);
+							}
+							if (ckm == null) {
+								ckm = new LinkedHashMap<>();
+								columnKeyMap.put(tableKeyColumnEntry.getKey(), ckm);
+							}
+
+							for (String column : list) {
+								if (column == null) {
+									continue;
+								}
+
+								ckm.putIfAbsent(column, column);
+								//FIXME 对 Comment.toId (多版本) 居然不起作用
+//								if (kcm.containsValue(column) == false) {
+									kcm.putIfAbsent(column, column);
+//								}
+							}
+
+//							for (String column : list) {
+//								if (column == null || ckm.get(column) != null) {
+//									continue;
+//								}
+//
+//								kcm.putIfAbsent(column, column);
+//							}
+
+						}
+					}
+
+				}
+			}
+
+		}
+
 	}
 
 	/**适配请求参数 JSON 中 @column:value 的 value 中的 key。支持 !key 反选字段 和 字段名映射
@@ -118,15 +191,15 @@ public class ColumnUtil {
 	 * @return
 	 * @see 先提前配置 {@link #VERSIONED_TABLE_COLUMN_MAP}，然后在 {@link AbstractSQLConfig} 的子类重写 {@link AbstractSQLConfig#setColumn } 并调用这个方法，例如
 	 * <pre >
-	   public AbstractSQLConfig setColumn(List<String> column) { <br>
-	  	 return super.setColumn(ColumnUtil.compatInputColumn(column, getTable(), version)); <br>
-	   }
+	public AbstractSQLConfig setColumn(List<String> column) { <br>
+	return super.setColumn(ColumnUtil.compatInputColumn(column, getTable(), version)); <br>
+	}
 	 * </pre>
 	 */
 	public static List<String> compatInputColumn(List<String> columns, String table, RequestMethod method, Integer version) {
 		String[] keys = columns == null ? null : columns.toArray(new String[]{});  // StringUtil.split(c, ";");
-		if (keys == null || keys.length <= 0) {
-			return columns;
+		if (keys == null || keys.length <= 0) { // JOIN 副表可以设置 @column:"" 来指定不返回字段
+			return columns != null ? columns : getClosestValue(VERSIONED_TABLE_COLUMN_MAP, version, table);
 		}
 
 		//		boolean isQueryMethod = RequestMethod.isQueryMethod(method);
@@ -134,8 +207,7 @@ public class ColumnUtil {
 		List<String> exceptColumns = new ArrayList<>(); // Map<String, String> exceptColumnMap = new HashMap<>();
 		List<String> newColumns = new ArrayList<>();
 
-		Map<String, Map<String, String>> tableKeyColumnMap = VERSIONED_KEY_COLUMN_MAP == null || VERSIONED_KEY_COLUMN_MAP.isEmpty() ? null : VERSIONED_KEY_COLUMN_MAP.get(version);
-		Map<String, String> keyColumnMap = tableKeyColumnMap == null || tableKeyColumnMap.isEmpty() ? null : tableKeyColumnMap.get(table);
+		Map<String, String> keyColumnMap = getClosestValue(VERSIONED_KEY_COLUMN_MAP, version, table);
 
 		String expression;
 		//...;fun0(arg0,arg1,...):fun0;fun1(arg0,arg1,...):fun1;...
@@ -164,8 +236,7 @@ public class ColumnUtil {
 
 						String rc = keyColumnMap == null || keyColumnMap.isEmpty() ? null : keyColumnMap.get(c);
 						exceptColumns.add(rc == null ? c : rc);  // 不使用数据库别名，以免 JOIN 等复杂查询情况下报错字段不存在	exceptColumnMap.put(nc == null ? c : nc, c);  // column:alias
-					}
-					else {
+					} else {
 						String rc = keyColumnMap == null || keyColumnMap.isEmpty() ? null : keyColumnMap.get(ck);
 						newColumns.add(rc == null ? ck : rc);  // 不使用数据库别名，以免 JOIN 等复杂查询情况下报错字段不存在 newColumns.add(rc == null ? ck : (isQueryMethod ? (rc + ":" + ck) : rc));
 					}
@@ -202,8 +273,9 @@ public class ColumnUtil {
 	 * @return
 	 */
 	public static String compatInputKey(String key, String table, RequestMethod method) {
-		return compatInputKey(key, table, method, null);
+		return compatInputKey(key, table, method, null, false);
 	}
+
 	/**适配请求参数 JSON 中 条件/赋值 键值对的 key
 	 * @param key
 	 * @param table
@@ -212,18 +284,25 @@ public class ColumnUtil {
 	 * @return
 	 * @see 先提前配置 {@link #VERSIONED_KEY_COLUMN_MAP}，然后在 {@link AbstractSQLConfig} 的子类重写 {@link AbstractSQLConfig#getKey } 并调用这个方法，例如
 	 * <pre >
-	   public String getKey(String key) { <br>
-	  	 return super.getKey(ColumnUtil.compatInputKey(key, getTable(), version)); <br>
-	   }
+	public String getKey(String key) { <br>
+	return super.getKey(ColumnUtil.compatInputKey(key, getTable(), version)); <br>
+	}
 	 * </pre>
 	 */
-	public static String compatInputKey(String key, String table, RequestMethod method, Integer version) {
-		Map<String, Map<String, String>> tableKeyColumnMap = VERSIONED_KEY_COLUMN_MAP == null || VERSIONED_KEY_COLUMN_MAP.isEmpty() ? null : VERSIONED_KEY_COLUMN_MAP.get(version);
-		Map<String, String> keyColumnMap = tableKeyColumnMap == null || tableKeyColumnMap.isEmpty() ? null : tableKeyColumnMap.get(table);
-		String alias = keyColumnMap == null || keyColumnMap.isEmpty() ? null : keyColumnMap.get(key);
-		return alias == null ? key : alias;
+	public static String compatInputKey(String key, String table, RequestMethod method, Integer version, boolean throwWhenNoKey) {
+		Map<String, String> keyColumnMap = getClosestValue(VERSIONED_KEY_COLUMN_MAP, version, table);
+		boolean isEmpty = keyColumnMap == null || keyColumnMap.isEmpty();
+		String alias = isEmpty ? null : keyColumnMap.get(key);
+		if (alias == null) {
+			if (isEmpty == false && throwWhenNoKey) {
+				throw new NullPointerException(table + ":{} 中不允许传 " + key + " ！");
+			}
+			return key;
+		}
+
+		return alias;
 	}
-	
+
 	/**适配返回结果 JSON 中键值对的 key。可能通过不传 @column 等方式来返回原始字段名，这样就达不到隐藏真实字段名的需求了，所以只有最终这个兜底方式靠谱。
 	 * @param key
 	 * @param table
@@ -233,6 +312,7 @@ public class ColumnUtil {
 	public static String compatOutputKey(String key, String table, RequestMethod method) {
 		return compatOutputKey(key, table, method, null);
 	}
+
 	/**适配返回结果 JSON 中键值对的 key。可能通过不传 @column 等方式来返回原始字段名，这样就达不到隐藏真实字段名的需求了，所以只有最终这个兜底方式靠谱。
 	 * @param key
 	 * @param table
@@ -241,17 +321,64 @@ public class ColumnUtil {
 	 * @return
 	 * @see 先提前配置 {@link #VERSIONED_COLUMN_KEY_MAP}，然后在 {@link AbstractSQLExecutor} 的子类重写 {@link AbstractSQLExecutor#getKey } 并调用这个方法，例如
 	 * <pre >
-		protected String getKey(SQLConfig config, ResultSet rs, ResultSetMetaData rsmd, int tablePosition, JSONObject table,
-				int columnIndex, Map<String, JSONObject> childMap) throws Exception { <br>
-			return ColumnUtil.compatOutputKey(super.getKey(config, rs, rsmd, tablePosition, table, columnIndex, childMap), config.getTable(), config.getMethod(), version); <br>
-		}
+	protected String getKey(SQLConfig config, ResultSet rs, ResultSetMetaData rsmd, int tablePosition, JSONObject table,
+	int columnIndex, Map<String, JSONObject> childMap) throws Exception { <br>
+	return ColumnUtil.compatOutputKey(super.getKey(config, rs, rsmd, tablePosition, table, columnIndex, childMap), config.getTable(), config.getMethod(), version); <br>
+	}
 	 * </pre>
 	 */
 	public static String compatOutputKey(String key, String table, RequestMethod method, Integer version) {
-		Map<String, Map<String, String>> tableColumnKeyMap = VERSIONED_COLUMN_KEY_MAP == null || VERSIONED_COLUMN_KEY_MAP.isEmpty() ? null : VERSIONED_COLUMN_KEY_MAP.get(version);
-		Map<String, String> columnKeyMap = tableColumnKeyMap == null || tableColumnKeyMap.isEmpty() ? null : tableColumnKeyMap.get(table);
+		Map<String, String> columnKeyMap = getClosestValue(VERSIONED_COLUMN_KEY_MAP, version, table);
 		String alias = columnKeyMap == null || columnKeyMap.isEmpty() ? null : columnKeyMap.get(key);
 		return alias == null ? key : alias;
+	}
+
+	public static <T> T getClosestValue(SortedMap<Integer, Map<String, T>> versionedMap, Integer version, String table) {
+		boolean isEmpty = versionedMap == null || versionedMap.isEmpty();
+
+		Map<String, T> map = isEmpty || version == null ? null : versionedMap.get(version);
+		T m = map == null ? null : map.get(table);
+		if (isEmpty == false && m == null) {
+			Set<Entry<Integer, Map<String, T>>> set = versionedMap.entrySet();
+
+			T lm = null;
+			for (Entry<Integer, Map<String, T>> entry : set) {
+				Map<String, T> val = entry.getValue();
+				m = val == null ? null : val.get(table);
+				if (m == null) {
+					continue;
+				}
+
+				if (version == null || version == 0) {
+					//	versionedMap.put(null, val);
+					return m;
+				}
+
+				Integer key = entry.getKey();
+				if (key == null) {
+					lm = m;
+					map = val;
+					continue;
+				}
+
+				if (version >= key) {
+					versionedMap.put(version, val);
+					return m;
+				}
+
+				break;
+			}
+
+			if (lm != null) {
+				m = lm;
+			}
+
+			if (map != null) {
+				versionedMap.put(version, map);
+			}
+		}
+
+		return m;
 	}
 
 
