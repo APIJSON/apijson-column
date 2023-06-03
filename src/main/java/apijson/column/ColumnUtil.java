@@ -111,15 +111,15 @@ public class ColumnUtil {
 			
 			for (Entry<Integer, Map<String, List<String>>> entry : allSet) {
 				Map<String, Map<String, String>> keyColumnMap = VERSIONED_KEY_COLUMN_MAP.get(entry.getKey());
-				Map<String, Map<String, String>> columnKeyMap = VERSIONED_COLUMN_KEY_MAP.get(entry.getKey());
+// 没必要，没特殊配置的就原样返回，没有安全隐患，还能减少性能浪费				Map<String, Map<String, String>> columnKeyMap = VERSIONED_COLUMN_KEY_MAP.get(entry.getKey());
 				if (keyColumnMap == null) {
 					keyColumnMap = new LinkedHashMap<>();
 					VERSIONED_KEY_COLUMN_MAP.put(entry.getKey(), keyColumnMap);
 				}
-				if (columnKeyMap == null) {
-					columnKeyMap = new LinkedHashMap<>();
-					VERSIONED_COLUMN_KEY_MAP.put(entry.getKey(), columnKeyMap);
-				}
+//				if (columnKeyMap == null) {
+//					columnKeyMap = new LinkedHashMap<>();
+//					VERSIONED_COLUMN_KEY_MAP.put(entry.getKey(), columnKeyMap);
+//				}
 				
 				Map<String, List<String>> tableKeyColumnMap = entry == null ? null : entry.getValue();
 				Set<Entry<String, List<String>>> tableKeyColumnSet = tableKeyColumnMap == null ? null : tableKeyColumnMap.entrySet();
@@ -133,22 +133,22 @@ public class ColumnUtil {
 						if (list != null && list.isEmpty() == false) {
 
 							Map<String, String> kcm = keyColumnMap.get(tableKeyColumnEntry.getKey());
-							Map<String, String> ckm = columnKeyMap.get(tableKeyColumnEntry.getKey());
+//							Map<String, String> ckm = columnKeyMap.get(tableKeyColumnEntry.getKey());
 							if (kcm == null) {
 								kcm = new LinkedHashMap<>();
 								keyColumnMap.put(tableKeyColumnEntry.getKey(), kcm);
 							}
-							if (ckm == null) {
-								ckm = new LinkedHashMap<>();
-								columnKeyMap.put(tableKeyColumnEntry.getKey(), ckm);
-							}
+//							if (ckm == null) {
+//								ckm = new LinkedHashMap<>();
+//								columnKeyMap.put(tableKeyColumnEntry.getKey(), ckm);
+//							}
 
 							for (String column : list) {
 								if (column == null) {
 									continue;
 								}
 
-								ckm.putIfAbsent(column, column);
+//								ckm.putIfAbsent(column, column);
 								//FIXME 对 Comment.toId (多版本) 居然不起作用
 //								if (kcm.containsValue(column) == false) {
 									kcm.putIfAbsent(column, column);
@@ -245,8 +245,7 @@ public class ColumnUtil {
 		}
 
 		boolean isEmpty = exceptColumns == null || exceptColumns.isEmpty();  // exceptColumnMap == null || exceptColumnMap.isEmpty();
-		Map<String, List<String>> map = isEmpty || VERSIONED_TABLE_COLUMN_MAP == null || VERSIONED_TABLE_COLUMN_MAP.isEmpty() ? null : VERSIONED_TABLE_COLUMN_MAP.get(version);
-		List<String> allColumns = map == null || map.isEmpty() ? null : map.get(table);
+		List<String> allColumns = isEmpty ? null : getClosestValue(VERSIONED_TABLE_COLUMN_MAP, version, table);
 
 		if (allColumns != null && allColumns.isEmpty() == false) {
 
