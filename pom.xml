@@ -5,7 +5,7 @@
 
 	<groupId>apijson.column</groupId>
 	<artifactId>apijson-column</artifactId>
-	<version>1.9.0-springboot3</version>
+	<version>1.9.2-springboot3</version>
 	<packaging>jar</packaging>
 
 	<name>apijson-column</name>
